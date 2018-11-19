@@ -90,7 +90,7 @@ export function ajax (opts, next) {
       req.onreadystatechange = function () {
         // console.log('state', req.readyState, req);
         if (req.readyState === 2) { // HEADERS_RECEIVED
-          let headers = parseHeaders(req.getAllResponseHeaders(), opts.camelHeaders)
+          let headers = parseHeaders(req.getAllResponseHeaders(), opts.camelHeaders, req.status)
           req.abort()
           emit(null, undefined, headers)
         }
@@ -131,7 +131,7 @@ export function ajax (opts, next) {
             return emit(err)
           }
         }
-        emit(null, data, parseHeaders(req.getAllResponseHeaders(), opts.camelHeaders))
+        emit(null, data, parseHeaders(req.getAllResponseHeaders(), opts.camelHeaders, req.status))
       }
     }
     req.onerror = function (e) {
@@ -166,7 +166,7 @@ export function ajax (opts, next) {
   return req
 }
 
-function parseHeaders (str, camelHeaders) {
+function parseHeaders (str, camelHeaders, status) {
   let ret = {}
   str.trim().split('\n').forEach(function (key) {
     key = key.replace(/\r/g, '')
@@ -174,5 +174,8 @@ function parseHeaders (str, camelHeaders) {
     let name = arr.shift().toLowerCase()
     ret[camelHeaders ? camelCase(name) : name] = arr.shift()
   })
+  if (!(status in ret)) {
+    ret.status = status.toString()
+  }
   return ret
 }
